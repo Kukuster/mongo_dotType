@@ -364,7 +364,7 @@ import { Expand, FlattenUnion_shallow, objNotNever } from "mongo_dottype/dist/ex
 </details>
 
 
-The, the recommended usage by default would be the following:
+Then, the recommended usage by default would be the following:
 
 <details>
     <summary>FindDocs3.ts</summary>
