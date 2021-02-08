@@ -1,8 +1,9 @@
 {
   "name": "mongo_dottype",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TypeScript types for using dot notation in mongo queries",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build1": "tsc --build tsconfig.json",
     "build": "tsc",
