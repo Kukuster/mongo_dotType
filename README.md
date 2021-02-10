@@ -2,34 +2,33 @@
 
 TypeScript (v4.1+) types for using <a href="https://docs.mongodb.com/manual/core/document/#document-dot-notation">mongoDB dot notation</a> while querying mongo documents.
 
-## Deepness and performance
-The package provides only with types for subproperties up to 2 levels deep, i.e.:
-```TypeScript
-// from
-{
-    prop2: {
-        sp24: {
-            ssp241: string;
-        };
-    };
-}
-// to
-{
-    "prop2.sp24.ssp241"?: string;
-}
+## How to use
+
+*Install*
+
+```bash
+npm install mongo_dottype --save-dev
 ```
-But you can still define deeper levels yourself (3rd, 4th, maybe 5th) by copying commented definitions from the `mongoDotType.type.d.ts` file.
 
-These definitions were left commented intentionally though.
+*Use*
 
-Starting with level 3, simply having such high level type alias definition can cause TS compiler to run slower.
+```TypeScript
+import { mongoDot_lvl2 } from "mongo_dottype";
 
-Starting with level 4, in some cases TypeScript fails to instantiate a type producing the error:
-`Type instantiation is excessively deep and possibly infinite. ts(2589)`
+interface Users {
+    /* ... */
+}
 
-You are unlikely to make level 5 work at all. If you do, more power to you!
+// If you don't need array indices for "array element dot notation"
+type Users_dotNotation_a = mongoDot_lvl2<Users>;
 
+// If you need some array indices to work, i.e. for the first two elements
+type Users_dotNotation_b = mongoDot_lvl2<Users, 0|1>;
 
+// Although allowed, by the TypeScript v4.1.4 type inference for this case is practically not supported (see the bottom section)
+type Users_dotNotation_c = mongoDot_lvl2<Users, number>;
+```
+<br>
 
 ## Quick example:
 
@@ -208,11 +207,44 @@ type Doc2_mongoDot = {
 </details>
 
 
-<br><br>
+<br>
+
+
+
+## Deepness and performance
+The package provides only with types for subproperties up to 2 levels deep, i.e.:
+```TypeScript
+// from
+{
+    prop2: {
+        sp24: {
+            ssp241: string;
+        };
+    };
+}
+// to
+{
+    "prop2.sp24.ssp241"?: string;
+}
+```
+But you can still define deeper levels yourself (3rd, 4th, maybe 5th) by copying commented definitions from the `mongoDotType.type.d.ts` file.
+
+These definitions were left commented intentionally though.
+
+Starting with level 3, simply having such high level type alias definition can cause TS compiler to run slower.
+
+Starting with level 4, in some cases TypeScript fails to instantiate a type producing the error:
+`Type instantiation is excessively deep and possibly infinite. ts(2589)`
+
+You are unlikely to make level 5 work at all. If you do, more power to you!
+
+
+
+<br>
 
 ## Even longer example (using mongoose):
 
-Say you create a mongoose model:
+**_Say you create a mongoose model:_**
 
 <details>
   <summary>Doc3.model.ts</summary>
@@ -338,8 +370,9 @@ export default model<Doc3_document>('Doc3', Doc3Schema);
 ```
 </details>
 
+<br>
 
-Define the type generic for dot notation up to 3 lvl deep:
+**_Define the type generic for dot notation up to 3 lvl deep:_**
 
 <details>
     <summary>mongoDot_deeper.ts</summary>
@@ -350,21 +383,22 @@ import { Expand, FlattenUnion_shallow, objNotNever } from "mongo_dottype/dist/ex
 
 /**
  * Picks subproperties (& subelements) of 3rd level deep (subsubsub-properties and -elements) with dot notation
- * If `arrIndeces` is provided, uses all these indeces to pick elements of array properties of the given object with dot notation
+ * If `arrIndices` is provided, uses all these indices to pick elements of array properties of the given object with dot notation
  */
- export type sublvl3<T, arrIndeces extends number = never> = objNotNever<sub<sublvl2<T, arrIndeces>, arrIndeces>>; 
+ export type sublvl3<T, arrIndices extends number = never> = objNotNever<sub<sublvl2<T, arrIndices>, arrIndices>>; 
 /**
  * Converts into a type with subproperties and subelements of up to 3 levels deep with dot notation
- * If `arrIndeces` is provided, uses all these indeces to pick elements of array properties of the given object with dot notation
+ * If `arrIndices` is provided, uses all these indices to pick elements of array properties of the given object with dot notation
  */
- export type mongoDot_lvl3<T, arrIndeces extends number = never> = Expand<FlattenUnion_shallow<obj_defaultDocFields | sublvl0<T, arrIndeces> | sublvl1<T, arrIndeces> | sublvl2<T, arrIndeces> | sublvl3<T, arrIndeces>>>;
+ export type mongoDot_lvl3<T, arrIndices extends number = never> = Expand<FlattenUnion_shallow<obj_defaultDocFields | sublvl0<T, arrIndices> | sublvl1<T, arrIndices> | sublvl2<T, arrIndices> | sublvl3<T, arrIndices>>>;
 
 ```
   
 </details>
 
+<br>
 
-Then, the recommended usage by default would be the following:
+**_Then, the recommended usage by default would be the following:_**
 
 <details>
     <summary>FindDocs3.ts</summary>
@@ -474,4 +508,24 @@ import { FindDocs3 } from "./FindDocs3.ts";
 
 ```
 </details>
+
+<br>
+
+
+## Using `number` type for allowed array indices
+This type alias:
+```TypeScript
+type Users_dotNotation = mongoDot_lvl2<Users, number>;
+```
+will result in a type with object keys of type ``` `somestring${number}` ```.
+
+If you explicitly try to use this type literal (``` `prop.${number}` ```) to index an object, 
+TSC may produce an error: ```"`prop.${number}` cannot be used to index type ..."```.
+But when calculated for the type aliases provided here, such a situation, instead of an error, "silently" produces either type `never` or, weirdly enough, `undefined` in place of an object that you're trying to index.
+
+By the time I'm writing it, using `number` practically doesn't work. Although the TS calculations seem to work out correctly, the key part, the type checking, simply isn't supported for type literals as object keys by now.
+You can play around with the `PickSubs_dotNotation` type, as this is where (almost) all the magic happens.
+I will be submitting a GitHub issue to TypeScript regarding usage of `somestring${number}` for indexing objects.
+
+
 
