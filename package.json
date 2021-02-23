@@ -1,11 +1,10 @@
 {
   "name": "mongo_dottype",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "TypeScript types for using dot notation in mongo queries",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build1": "tsc --build tsconfig.json",
     "build": "tsc",
     "prepublishOnly": "",
     "publish": ""
@@ -20,12 +19,17 @@
     "dot",
     "notation",
     "dotnotation",
+    "dot-notation",
+    "DotAndArrayNotation",
     "mongoose",
     "typescript",
     "ts",
     "types",
     "type",
-    "utils"
+    "utils",
+    "dottype",
+    "mongodot",
+    "annotations"
   ],
   "author": "Kukuster",
   "license": "MIT",
